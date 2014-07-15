@@ -1,0 +1,6 @@
+generated/
+dynamic/
+.idea/
+composer.lock
+php.ini
+vendor/

@@ -1,0 +1,24 @@
+{
+    "name": "andro/Node-Manager",
+    "description": "Andromeda Node Manager",
+    "autoload": {
+        "classmap": ["application"]
+    },
+    "homepage": "http://www.andromeda-project.org",
+    "authors": [
+        {
+            "name": "Donald Organ",
+            "email": "dorgan@donaldorgan.com",
+            "homepage": "http://www.donaldorgan.com",
+            "role": "Current Project Maintainer"
+        },
+        {
+            "name": "Ken Downs",
+            "homepage": "http://database-programmer.blogspot.com/",
+            "role": "Chief Architect, PostgreSQL/DB Master (No Longer Contributing)"
+        }
+    ],
+    "require": {
+        "andro/andromeda": "dev-development"
+    }
+}
