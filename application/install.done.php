@@ -13,17 +13,17 @@ class install extends x_table2 {
          $GLOBALS["parm"] = array(
             "DBSERVER_URL"=>"localhost"
             ,"UID"=>SessionGet('UID')
-            ,"DIR_PUBLIC"=>realpath($GLOBALS['AG']['dirs']['root'].'..')
-            ,"DIR_PUBLIC_APP"=>"andro"
-            ,"APP"=>"andro"
+            ,"DIR_PUBLIC"=>realpath($GLOBALS['AG']['dirs']['root'].'../../../../')
+            ,"DIR_PUBLIC_APP"=>"nodemanager"
+            ,"APP"=>"NodeManager"
             ,"APPDSC"=>"Andromeda Node Manager"
             ,"SPEC_BOOT"=>"AndroDBB"
             ,"SPEC_LIB"=>"andro_universal"
-            ,"SPEC_LIST"=>"andro.dd.yaml"
+            ,"SPEC_LIST"=>"nodemanager.dd.yaml"
          );
          include("androBuild.php");
-         SessionSet('UID','andro');
-         SessionSet('PWD','andro');
+         SessionSet('UID','NodeManager');
+         SessionSet('PWD','NodeManager');
          echo  ob_get_clean();
          return;
       }
@@ -151,10 +151,9 @@ class install extends x_table2 {
       
       // If they provided credentials, try to post them
       if(gpExists('loginUID')) {
-         if(substr(strtolower(gp('loginUID')),0,5)=='andro') {
-            ErrorAdd("Superuser account may not begin with 'andro'");
-         }
-         else {
+         if(substr(strtolower(gp('loginUID')),0,5)=='nodemanager') {
+            ErrorAdd("Superuser account may not begin with 'nodemanager'");
+         } else {
             SessionSet('xUID',gp('loginUID'));
             SessionSet('xPWD',gp('loginPWD'));
          }
@@ -205,7 +204,7 @@ class install extends x_table2 {
                $cs=SQL_ConnString(
                   SessionGet('xUID')
                   ,SessionGet('xPWD')
-                  ,'andro'
+                  ,'nodemanager'
                );
                $this->dba=@pg_connect($cs);
                if(!$this->dba) {
@@ -256,7 +255,7 @@ class install extends x_table2 {
 
                $table_dd=dd_TableRef('applications');
                $row=array(
-                  'application'=>'andro'
+                  'application'=>'nodemanager'
                   ,'description'=>"Andromeda Node Manager"
                   ,'appspec'=>'andro.dd.yaml'
                   ,'node'=>'LOCAL'
@@ -266,8 +265,8 @@ class install extends x_table2 {
 
                
                scDBConn_Pop();
-               SessionSet('UID','andro');
-               SessionSet('PWD','andro');
+               SessionSet('UID','nodemanager');
+               SessionSet('PWD','nodemanager');
                break;
             case 5:
                break;
@@ -448,7 +447,7 @@ max_connections = 100</textarea>
       ?>
       <h3>Create Your Superuser</h3>
       <p>In this step you must create a database superuser and
-         create an empty 'andro' database.
+         create an empty 'nodemanager' database.
       
       <p>Go into pgadmin3 (or pgsql at the linux CLI) and enter
       these SQL commands.  Remember to substitute actual values for
@@ -468,7 +467,7 @@ create database andro;</textarea>
          runs by default as "www-data", and on Fedora Core 6 it runs
          as "daemon".
 <div class='cli'># chown root:APACHE /path/to/andro -R
-# chmod g+rw /path/to/andro -R
+# chmod g+rw /path/to/nodemanager -R
 </div>
 
       <br>
@@ -485,7 +484,7 @@ create database andro;</textarea>
       ?>
       <p>In this step we need to know the username and password
          of the superuser that you just created.
-      <p><b>Please Note: the superuser ID may not begin with 'andro'.</b></p>
+      <p><b>Please Note: the superuser ID may not begin with 'nodemanager'.</b></p>
       <form action="index.php" method='post'>
       <table>
          <tr><td>Superuser Account:
@@ -511,7 +510,7 @@ create database andro;</textarea>
    function NMCreate()  { 
       if($this->andro==0) {
          ?>
-         <p>The 'andro' database does not exist.  Please 
+         <p>The 'nodemanager' database does not exist.  Please
             <a href="?stepreset=2">RollBack to Superuser/andro Instructions</a>
             and follow the instructions for creating the Node Manager
             database.
@@ -523,7 +522,7 @@ create database andro;</textarea>
          the link below to build the complete Node Manager.
          
          <p>If you have just installed these files, you will need to 
-            change the ownership of the 'andro' directory to the apache
+            change the ownership of the 'nodemanager' directory to the apache
             user, which is 'apache' on gentoo and 'www-data' on Ubuntu.
             
          <p>If after you have changed the ownership, and the program 

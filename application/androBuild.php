@@ -1,6 +1,5 @@
 <?php
 /* ================================================================== *\
-   (C) Copyright 2005 by Secure Data Software, Inc.
    This file is part of Andromeda
    
    Andromeda is free software; you can redistribute it and/or modify
@@ -40,6 +39,12 @@ ini_set("allow_url_open",false);
 ini_set("display_errors",true);
 ini_set("log_errors",true);
 
+$libClass = new ReflectionClass('x_table2');
+$libFile = $libClass->getFileName();
+$info = pathinfo($libFile);
+global $parm;
+$parm['DIR_LIB'] = $info['dirname'] .'/';
+$parm['DIR_ANDRO'] = realpath($parm['DIR_LIB'] .'../') .'/';
 $o = new x_builder();
 $o->main();
 // ===================================================================
@@ -191,14 +196,14 @@ class x_builder {
         $specboot = $parm['SPEC_BOOT'].".add";
         $checksums[] = array(
             'file'=>$specboot,
-            'md5'=>md5_file( $parm['DIR_PUB'].'lib/' .$specboot ),
-            'fullpath'=>$parm['DIR_PUB'].'lib/' .$specboot
+            'md5'=>md5_file( $parm['DIR_LIB'] .$specboot ),
+            'fullpath'=>$parm['DIR_LIB'] .$specboot
         );
 
         $checksums[] = array(
             'file'=>'andro_universal.add',
-            'md5'=>md5_file( $parm['DIR_PUB'].'lib/andro_universal.add' ),
-            'fullpath'=>$parm['DIR_PUB'].'lib/andro_universal.add'
+            'md5'=>md5_file( $parm['DIR_LIB'].'andro_universal.add' ),
+            'fullpath'=>$parm['DIR_LIB'].'andro_universal.add'
         );
 
         if ( isset( $parm['INST'] ) ) {
@@ -298,18 +303,18 @@ class x_builder {
 
           // Need to know if we are building andro.  if not, find the
           // directory to link to
-          if ($parm['APP']=='andro') {
+          if ($parm['APP']=='NodeManager') {
              $GLOBALS['dir_andro']='';
              $this->LogEntry(
                 "Building Node Manager, no linking of LIB directory."
              );
-          }
-          else {
+          } else {
              $sql = 'SELECT w.dir_pub FROM webpaths w JOIN applications a '
-                ." ON w.webpath = a.webpath WHERE a.application='andro'";
+                ." ON w.webpath = a.webpath WHERE a.application='NodeManager'";
              $res = pg_query($sql);
              $row = pg_fetch_array($res);
-             $GLOBALS['dir_andro']=$this->FS_AddSlash($row['dir_pub']).'andro/';
+             //$GLOBALS['dir_andro']=$this->FS_AddSlash($row['dir_pub']).'NodeManager/';
+              $GLOBALS['dir_andro'] = '';
              $this->LogEntry("Node Manager directory: ".$GLOBALS['dir_andro']);
           }
         }
@@ -325,12 +330,12 @@ class x_builder {
             " dbname=".strtolower($parm["APP"]).
             " user=".$parm["UID"].
             " password=".$pw;
-        $con2 = pg_connect($cnx,PGSQL_CONNECT_FORCE_NEW);
+        $con2 = @pg_connect($cnx,PGSQL_CONNECT_FORCE_NEW);
         if (!$con2) {
             $this->LogEntry("Database does not exist, creating it now.");
             # KFD 1/27/09, case insensitivity
             pg_query($GLOBALS["dbconna"]
-                ,"create database ".strtolower($parm["APP"])
+                ,"create database \"".trim(strtolower($parm["APP"])) ."\""
             );
 
             $con2 = pg_connect($cnx,PGSQL_CONNECT_FORCE_NEW);
@@ -577,8 +582,7 @@ class x_builder {
 
         // Load and convert the DD arrays
         $this->LogStage("Bootstrapping the data dictionary tables");
-        $specboot = $parm["DIR_PUB"]."lib/".$parm["SPEC_BOOT"].".add";
-
+        $specboot = $parm["DIR_LIB"].$parm["SPEC_BOOT"].".add";
         $this->DBB_LoadAddFile($specboot,$this->ddarr);
         //$this->writeAsYAML(
         //    $parm["DIR_PUB"]."lib/".$parm["SPEC_BOOT"].'.dd.yaml'
@@ -979,9 +983,10 @@ class x_builder {
 
         // Load any library specification
         $sfx="";
-        $spec_lib= $parm["DIR_PUB"]."lib/".$parm["SPEC_LIB"].".add";
+        $spec_lib= $parm["DIR_LIB"] .$parm["SPEC_LIB"].".add";
         $this->LogStage("Processing library spec to main series");
         $ta = array();
+
         $this->DBB_LoadAddFile($spec_lib,$ta);
         $this->LogEntry("Loading spec to main series");
         $srcfile='andro_universal';
@@ -1000,15 +1005,16 @@ class x_builder {
             $speclist = explode(",",$parm["SPEC_LIST"]);
             foreach ($speclist as $spec) {
                 $srcfile=$spec;
+
                 // KFD 4/16/07, Added support for YAML specs
                 if(substr($spec,-5)<>'.yaml') {
-                    $spec = $parm["DIR_PUB"]."application/".$spec.".add";
-                }
-                else {
-                    $spec = $parm["DIR_PUB"]."application/".$spec;
+                    $spec = $parm["DIR_WORKING"] .'/' .$spec.".add";
+                } else {
+                    $spec = $parm["DIR_WORKING"] .'/' .$spec;
                     $this->LogEntry("Looking for spec in YAML format: ");
                     $this->LogEntry("   ".$spec);
                 }
+
                 if (!file_exists($spec)) {
                     $this->LogEntry(" >>>> Missing Specification File");
                     $this->LogEntry(" >>>> File Not Found: $spec");
@@ -1019,16 +1025,14 @@ class x_builder {
                     $this->LogEntry(" >>>> if you have created a spec file and are expecting");
                     $this->LogEntry(" >>>> it to be built, then it must be misnamed or");
                     $this->LogEntry(" >>>> or in the wrong directory.");
-                }
-                else {
+                } else {
                     // KFD 4/16/07, Added support for YAML specs
                     if(substr($spec,-5)<>'.yaml') {
                         $this->DBB_LoadAddFile($spec,$ta);
-                    }
-                    else {
+                    } else {
                         $retval = $retval && $this->DBB_LoadYAMLFile($spec,$ta);
                     }
-                    if($retval) {
+                    if ($retval) {
                         $this->LogEntry("Loading spec to main series");
                         $retval=$retval && $this->SpecLoad_ArrayToTables(
                             $ta["data"]
@@ -8184,7 +8188,7 @@ class x_builder {
         // If we are working on the node manager itself, rebuild the list
         // of actual users and groups
         global $parm;
-        if ($parm["APP"]=="andro") {
+        if ($parm["APP"]=="NodeManager") {
             $this->SecurityNodeManager_Andro();
         }
         return true;
@@ -8867,7 +8871,7 @@ class x_builder {
         }
 
         // Substitute macros.  At the moment there is only "$LOGIN"
-        $string = preg_replace('/\$LOGIN/',$parm["APP"],$string);
+        $string = preg_replace('/\$LOGIN/', $parm["APP"],$string);
 
         // Remove comments and blank lines
         // (mostly to make it easier to debug the output)
@@ -8877,6 +8881,7 @@ class x_builder {
 
         // Add the semi-colon to end of list if not found, now all
         // items have semi-colon terminators.  This is favor to typist.
+
         $string = preg_replace("/([^;^\s^\}])(\s*)\}/",'$1;$2}',$string);
 
         // A match must:
@@ -8890,8 +8895,10 @@ class x_builder {
         // These combination of features allows users to put quotes around their own values,
         // but not within the values.
         //
+
         $string = preg_replace("/([\}\{:;])(\s*)([^\{^\}^:^;^\"]*);/",'$1$2"$3"$4;',$string);
         $string = preg_replace("/([\}\{:;])(\s*)([^\{^\}^:^;^\"]*);/",'$1$2"$3"$4;',$string);
+
 
         // Now the property assignments, which we comfortably assume are words
         $string = preg_replace("/(\w+):/U",'"$1"=>',$string);
@@ -8918,7 +8925,8 @@ class x_builder {
 
         // Write the output to a file and execute it
         $temp = array();  // to avoid compiler warning
-       $fileout=$parm["DIR_TMP"].basename($filename).".php";
+        $fileout=$parm["DIR_TMP"].basename($filename).".php";
+
         $this->FS_PUT_CONTENTS($fileout,
             "<?php\n".
             "// File generated from $filename during build \n".
@@ -9730,11 +9738,12 @@ class x_builder {
     function jsMinify() {
         $this->logStage("Minifying JS Files in clib");
 
-        require 'jsmin-1.1.0.php';
-        require 'class.JavaScriptPacker.php';
+        //require 'jsmin-1.1.0.php';
+        //require 'class.JavaScriptPacker.php';
 
         #$dirTop = $GLOBALS['parm']['DIR_PUB'].$GLOBALS['parm']['DIR_PUBLIC_APP'];
         $dirTop = $GLOBALS['parm']['DIR_PUB'];
+
         $dirCLib= $dirTop.'clib/';
         $dirALib= $dirTop.'appclib/';
 
@@ -9931,8 +9940,8 @@ class x_builder {
         $app = $GLOBALS["parm"]["APP"];
         $scn = "/tmp/andro_fix_$app.sh";
 
-        $dir_pub = $this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC"]);
-        $dir_pubx= $dir_pub.$this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC_APP"]);
+        $dir_pub = realpath($parm['DIR_LIB'] .'/../../../../../') .'/';
+        $dir_pubx= realpath($parm['DIR_LIB'] .'/../../../../') .'/';
 
         $SCRIPT = "";
 
@@ -9961,8 +9970,7 @@ class x_builder {
         //             install this does not work, must have hardcoded dir
         if(isset($this->dirsAll)) {
             $dirs = $this->dirsAll;
-        }
-        else {
+        } else {
             $dbres=pg_query($GLOBALS["dbconna"],"SELECT * FROM appdirs");
             $dirs =pg_fetch_all($dbres);
         }
@@ -9986,18 +9994,16 @@ class x_builder {
         global $parm;
         $app = $GLOBALS["parm"]["APP"];
         $dir_pub = $this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC"]);
-        $dir_pubx= $dir_pub.$this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC_APP"]);
-
+        $dir_pubx= realpath($parm['DIR_LIB'] .'/../../../../../') .'/' .$this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC_APP"]);
 
         // Establish the source
         $this->LogStage("Building Directories and Copying Files");
-        if(isset($parm['IVER'])) {
-            $dirl = AddSlash($parm['DIR_LINK_LIB']);
-            $dira = AddSlash($parm['DIR_LINK_APP']);
-        }
-        else {
-            $dirl = $dira = $GLOBALS['dir_andro'];
-        }
+
+        //if(isset($parm['IVER'])) {
+        //    $dira = AddSlash($parm['DIR_LINK_APP']);
+       // }
+
+        $dirl = $dira = $parm['DIR_LIB'];
 
         // Now handle all of the subdirectories, including templates, lib,
         // clib and so forth.  Read them out of the node manager.
@@ -10006,8 +10012,7 @@ class x_builder {
         //             install this does not work, must have hardcoded dir
         if(isset($this->dirsAll)) {
             $dirs = $this->dirsAll;
-        }
-        else {
+        } else {
             $dbres=pg_query($GLOBALS["dbconna"],"SELECT * FROM appdirs");
             $dirs =pg_fetch_all($dbres);
         }
@@ -10016,7 +10021,7 @@ class x_builder {
             $this->LogEntry("Processing subdir: $tgt");
 
             if(!file_exists($dir_pubx.$tgt)) {
-                $this->LogEntry(" -> Creating this directory: $dir_pubx.$tgt");
+                $this->LogEntry(" -> Creating this directory: $dir_pubx$tgt");
                 mkdir($dir_pubx.$tgt);
             }
 
@@ -10050,18 +10055,16 @@ class x_builder {
                     //$cmd="rm $dir$tgt/*";
                     //`$cmd`;
                 }
-            }
-          else {
+            } else {
              // In this branch we have directories that must be copied.
              // They may be application or library directories, and this
              // may be an app or an instance, so there are a few more
              // switches.  And of course, nothing gets copied for the node
              // manager itself.
              //
-             if($app=='andro') {
+             if($app=='NodeManager') {
                 $this->LogEntry(" -> NODE MANAGER build, no copy.");
-             }
-             else {
+             } else {
                  # KFD 7/14/08, hardcode templates to pull from
                  #              library first, then application
                  if($tgt=='templates') {
@@ -10070,21 +10073,16 @@ class x_builder {
                      $this->FSCopyTree($dirl,$dir_pubx,$tgt);
                      $this->FSCopyTree($dira,$dir_pubx,$tgt);
 
-                 }
-                 else {
-                    if($row['flag_lib']=='Y') {
-                       $this->LogEntry(" -> Library copy from: $dirl");
-                       $this->LogEntry(" ->                to:  $dir_pubx");
-                       $this->FSCopyTree($dirl,$dir_pubx,$tgt);
-                    }
-                    else {
+                 } else {
+                    if($row['flag_lib']<>'Y') {
+
                        if(!isset($parm['IVER'])) {
                           $this->LogEntry(" -> DEV Instance build, no copy");
-                       }
-                       else {
+                       } else {
                           $this->LogEntry("Directory $tgt will be copied");
                           $this->LogEntry(" -> Application copy from: $dira");
                           $this->LogEntry(" ->                    to:  $dir_pubx");
+                           die();
                           $this->FSCopyTree($dira,$dir_pubx,$tgt);
                        }
                     }
@@ -10105,13 +10103,13 @@ class x_builder {
         */
         $this->LogEntry("Copying /root files into root directory...");
 
-        $this->recursiveCopy($dir_pubx ."root" .DIRECTORY_SEPARATOR, $dir_pubx .DIRECTORY_SEPARATOR);
-        $this->LogEntry( "  Copying " .$dir_pubx ."root" .DIRECTORY_SEPARATOR ." to " .$dir_pubx .DIRECTORY_SEPARATOR);
+        $this->recursiveCopy($parm['DIR_ANDRO'] ."root" .DIRECTORY_SEPARATOR, $dir_pubx);
+        $this->LogEntry( "  Copying " .$dir_pubx ."root" .DIRECTORY_SEPARATOR ." to " .$dir_pubx);
 
-        copy($dir_pubx .DIRECTORY_SEPARATOR ."htaccess", $dir_pubx .DIRECTORY_SEPARATOR .".htaccess");
+        copy($parm['DIR_ANDRO'] ."/root/htaccess", $dir_pubx .".htaccess");
         $this->LogEntry( "  Copying .htaccess into place");
 
-        unlink( $dir_pubx .DIRECTORY_SEPARATOR ."htaccess" );
+        //unlink( $dir_pubx ."htaccess" );
         /*
        if(isWindows()) {
           $cmd="copy \"$dir_pubx" .DIRECTORY_SEPARATOR ."root" .DIRECTORY_SEPARATOR ."*\" \"$dir_pubx" .DIRECTORY_SEPARATOR ."\"";
@@ -10149,33 +10147,6 @@ class x_builder {
             }
         } else {
             $this->LogEntry("    " ."Not Found");
-        }
-
-        # KFD 1/24/09, copy any skeleton files found if not
-        #              an instance
-        if(!isset($parm['IVER'])) {
-            $this->LogEntry("");
-            $this->LogEntry("This is not an instance, looking for skeleton files");
-            # Pull all files named "skeleton" out of the andro library
-            $raw = scandir($dirl.'lib/');
-            foreach($raw as $onefile) {
-                if(substr($onefile,0,9)<>'skeleton.') continue;
-                $filedest = substr($onefile,9);
-                if($filedest=='dd.yaml')
-                    $filedest = $GLOBALS["parm"]["APP"].".dd.yaml";
-                if(file_exists("$dir_pubx/application/$filedest")) {
-                    $this->LogEntry(
-                        " -> File $filedest is already in application, no action"
-                    );
-                }
-                else {
-                    $this->LogEntry(
-                        " -> Creating $filedest from skeleton file"
-                    );
-                    $fc = file_get_contents($dirl."lib/$onefile");
-                    file_put_contents("$dir_pubx/application/$filedest",$fc);
-                }
-            }
         }
 
         return true;
@@ -10425,19 +10396,19 @@ class x_builder {
         $x = dirname(__FILE__);
         if(file_exists($x.'/install.php')) {
             $this->dirsAll = array(
-                array('dirname'=>'root'        ,'flag_copy'=>'Y','flag_lib'=>'Y','flag_vis'=>'N')
-                ,array('dirname'=>'lib'        ,'flag_copy'=>'Y','flag_lib'=>'Y','flag_vis'=>'N')
-                ,array('dirname'=>'clib'       ,'flag_copy'=>'Y','flag_lib'=>'Y','flag_vis'=>'Y')
-                ,array('dirname'=>'application','flag_copy'=>'Y','flag_lib'=>'N','flag_vis'=>'N')
-                ,array('dirname'=>'appclib'    ,'flag_copy'=>'Y','flag_lib'=>'N','flag_vis'=>'Y')
+                array('dirname'=>'root'        ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
+                ,array('dirname'=>'lib'        ,'flag_copy'=>'N','flag_lib'=>'Y','flag_vis'=>'N')
+                ,array('dirname'=>'clib'       ,'flag_copy'=>'N','flag_lib'=>'Y','flag_vis'=>'Y')
+                ,array('dirname'=>'application','flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
+                ,array('dirname'=>'appclib'    ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'Y')
                 ,array('dirname'=>'generated'  ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
                 ,array('dirname'=>'files'      ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
                 ,array('dirname'=>'tmp'        ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
-                ,array('dirname'=>'apppub'     ,'flag_copy'=>'Y','flag_lib'=>'N','flag_vis'=>'Y')
+                ,array('dirname'=>'apppub'     ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'Y')
                 ,array('dirname'=>'dynamic'    ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
                 ,array('dirname'=>'templates'  ,'flag_copy'=>'Y','flag_lib'=>'N','flag_vis'=>'Y')
                 ,array('dirname'=>'instpub'    ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'Y')
-                ,array('dirname'=>'docslib'    ,'flag_copy'=>'Y','flag_lib'=>'Y','flag_vis'=>'N')
+                ,array('dirname'=>'docslib'    ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
                 ,array('dirname'=>'docsapp'    ,'flag_copy'=>'Y','flag_lib'=>'N','flag_vis'=>'N')
                 ,array('dirname'=>'docsgen'    ,'flag_copy'=>'N','flag_lib'=>'N','flag_vis'=>'N')
              );
@@ -10500,7 +10471,7 @@ class x_builder {
         $this->LogEntry("---------------------------------------------------");
         $parm["DIR_WORKING"]=dirname(__FILE__);
         $this->LogEntry("Program executing in  : ". $parm["DIR_WORKING"]);
-       $parm["DIR_TMP"]=$parm["DIR_PUB"]."tmp/";
+        $parm["DIR_TMP"]=realpath($parm["DIR_WORKING"] .'/../')."/tmp/";
         $this->LogEntry("Temporary files go to : ". $parm["DIR_TMP"]);
         $this->LogEntry("===================================================");
 
@@ -10700,7 +10671,7 @@ class x_builder {
 
     function zzFileWriteGenerated($content,$filename) {
        global $parm;
-        $fname=$parm["DIR_PUB"].'generated/'.$filename;
+        $fname=realpath($parm["DIR_WORKING"] .'/../') .'/generated/'.$filename;
         $FILEOUT=fopen($fname,"w");
         //$this->LogEntry("Writing Generated File: $fname");
         fwrite($FILEOUT,$content);

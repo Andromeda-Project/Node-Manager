@@ -1,6 +1,5 @@
 <?php
 /* ================================================================== *\
-   (C) Copyright 2005 by Secure Data Software, Inc.
    This file is part of Andromeda
    
    Andromeda is free software; you can redistribute it and/or modify
@@ -83,8 +82,12 @@ class a_builder extends x_table2 {
 ?>
 ';
         $t=pathinfo(__FILE__);
-        $dircur = AddSlash($t["dirname"])."../tmp/";
-        $file = $dircur."do".$x_app.".php";
+        $realPath = realpath(AddSlash($t["dirname"]) .'../') .'/tmp';
+        if (!file_exists($realPath)) {
+            mkdir($realPath);
+        }
+        $dircur = $realPath;
+        $file = $dircur."/do".$x_app.".php";
         $FILE = fopen($file,"w");
         fwrite($FILE,$string);
         fclose($FILE);

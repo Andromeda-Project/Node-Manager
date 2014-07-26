@@ -4,3 +4,17 @@ dynamic/
 composer.lock
 php.ini
 vendor/
+clib/
+docsapp/
+docsgen/
+docslib/
+favicon.ico
+htaccess
+lib/
+phpWait.php
+root/
+rpath
+tmp/
+x4index.php
+pages
+files/

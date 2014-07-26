@@ -77,6 +77,10 @@ column svn_pwd:
     description: Subversion Password
     type_id: vchar
     colprec: 25
+column app_path:
+    description: Application Path
+    type_id: vchar
+    colprec: 250
     
     
 table applications: 
@@ -87,6 +91,9 @@ table applications:
     column application:
         primary_key: "Y"
         uisearch: "Y"
+        pk_change: "Y"
+    column app_path:
+        tooltip: Pull path to location of application
     column description:
         uisearch: "Y"
     column appspec_boot:
@@ -101,17 +108,6 @@ table applications:
         auto_formula: andro_universal
     column appspec:
         description: Spec File
-    column flag_svn:
-        suffix: _svn
-        description: Overwrite from SVN
-        tooltip: This flag must be set to Y to use subversion
-        automation_id: DEFAULT
-        auto_formula: "N"
-    column svn_url:   
-    column svn_uid:
-        tooltip: Type this in if your Subversion repository requires login.
-    column svn_pwd:
-        tooltip: Type this in if your Subversion repository requires login. 
     foreign_key webpaths:
         column webpath:
             description: Web Path
@@ -162,7 +158,7 @@ table instances:
         #  defined on another column, go figure.
         chain cons:
             test 00: 
-                compare: @application = andro
+                compare: @application = Node-Manager
                 return: Instances of Node Manager Are Not Allowed
               
       
@@ -438,4 +434,3 @@ table appfiles:
     column filemd5:  
         prefix: file
         description: File md5
-
