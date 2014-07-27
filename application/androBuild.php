@@ -303,6 +303,7 @@ class x_builder {
 
           // Need to know if we are building andro.  if not, find the
           // directory to link to
+          /*
           if ($parm['APP']=='NodeManager') {
              $GLOBALS['dir_andro']='';
              $this->LogEntry(
@@ -317,8 +318,8 @@ class x_builder {
               $GLOBALS['dir_andro'] = '';
              $this->LogEntry("Node Manager directory: ".$GLOBALS['dir_andro']);
           }
-        }
-        else {
+          */
+        } else {
             $this->LogEntry("*** ERROR: Could not connect, perhaps password is wrong.");
             return false;
         }
@@ -9941,17 +9942,16 @@ class x_builder {
         $scn = "/tmp/andro_fix_$app.sh";
 
         $dir_pub = realpath($parm['DIR_LIB'] .'/../../../../../') .'/';
-        $dir_pubx= realpath($parm['DIR_LIB'] .'/../../../../') .'/';
-
+        $dir_pubx= $parm['APP_ROOT_DIR'];
         $SCRIPT = "";
 
         // Step 1: Make sure parent directories are writable by us.
         // If not, fail here.
         //
-        $SCRIPT .= $this->FS_CHECKDIR($dir_pub,$grp);
-        if ($SCRIPT<>"") {
-            return $this->FS_PrepareFail($SCRIPT);
-        }
+        //$SCRIPT .= $this->FS_CHECKDIR($dir_pub,$grp);
+        //if ($SCRIPT<>"") {
+         //   return $this->FS_PrepareFail($SCRIPT);
+        //}
 
         // Next, the appplication subdir must exist or be creatable
         //
@@ -9993,8 +9993,8 @@ class x_builder {
         $grp = $this->ShellWhoAmI();
         global $parm;
         $app = $GLOBALS["parm"]["APP"];
-        $dir_pub = $this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC"]);
-        $dir_pubx= realpath($parm['DIR_LIB'] .'/../../../../../') .'/' .$this->FS_ADDSLASH($GLOBALS["parm"]["DIR_PUBLIC_APP"]);
+
+        $dir_pubx= $GLOBALS["parm"]['APP_ROOT_DIR'];
 
         // Establish the source
         $this->LogStage("Building Directories and Copying Files");
@@ -10082,7 +10082,6 @@ class x_builder {
                           $this->LogEntry("Directory $tgt will be copied");
                           $this->LogEntry(" -> Application copy from: $dira");
                           $this->LogEntry(" ->                    to:  $dir_pubx");
-                           die();
                           $this->FSCopyTree($dira,$dir_pubx,$tgt);
                        }
                     }

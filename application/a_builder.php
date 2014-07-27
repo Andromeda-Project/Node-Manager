@@ -69,6 +69,7 @@ class a_builder extends x_table2 {
 	,"DIR_PUBLIC_APP"=>"'.$x_app.'"
    ,"LOCALHOST_SUFFIX"=>"'.ArraySafe($row_n,'dir_local','').'"
    ,"APP"=>"'.$x_app.'"
+   ,"APP_ROOT_DIR"=>"' .trim($row_a["app_path"]) .'"
    ,"APPDSC"=>"'.trim($row_a["description"]).'"
    ,"XDIRS"=>"'.trim($row_a['xdirs']).'"
    ,"ROLE_LOGIN"=>"'.ArraySafe($row_a,'flag_rolelogin','Y').'"
