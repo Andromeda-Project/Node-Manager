@@ -38,7 +38,7 @@ function AppDir($app) {
    return trim($wp)."/$app/";
 }
 function AppDirs($app) {
-   if($app=='andro') {
+   if($app=='nodemanager') {
       $sq="SELECT dirname FROM appdirs WHERE flag_copy='Y'";
    }
    else {

@@ -22,8 +22,8 @@ class install extends x_table2 {
             ,"SPEC_LIST"=>"nodemanager.dd.yaml"
          );
          include("androBuild.php");
-         SessionSet('UID','NodeManager');
-         SessionSet('PWD','NodeManager');
+         SessionSet('UID','andromeda');
+         SessionSet('PWD','andromeda');
          echo  ob_get_clean();
          return;
       }
@@ -151,8 +151,8 @@ class install extends x_table2 {
       
       // If they provided credentials, try to post them
       if(gpExists('loginUID')) {
-         if(substr(strtolower(gp('loginUID')),0,5)=='nodemanager') {
-            ErrorAdd("Superuser account may not begin with 'nodemanager'");
+         if(substr(strtolower(gp('loginUID')),0,5)=='andromeda') {
+            ErrorAdd("Superuser account may not begin with 'andromeda'");
          } else {
             SessionSet('xUID',gp('loginUID'));
             SessionSet('xPWD',gp('loginPWD'));
@@ -225,7 +225,7 @@ class install extends x_table2 {
                SessionSet('UID',SessionGet('xUID'));
                SessionSet('PWD',SessionGet('xPWD'));
                scDBConn_Push();
-               $dir_pub=realpath(dirname(__FILE__).'/../..');
+               $dir_pub=realpath(dirname(__FILE__).'/../');
                if(strpos(ArraySafe($_ENV,'OS',''),'indows')!==false) {
                   $dir_pub = str_replace("\\","\\\\",$dir_pub);
                }
@@ -235,24 +235,7 @@ class install extends x_table2 {
                   ,'description'=>'Default Web Path'
                );
                $table_dd=dd_TableRef('webpaths');
-               SQLX_UpdateorInsert($table_dd,$row); 
-               
-		/*               
-		$table_dd=dd_TableRef('nodes');
-               $row=array(
-                  'node'=>'DHOST2'
-                  ,'description'=>"Andromeda Master Node"
-                  ,'node_url'=>'dhost2.secdat.com'
-               );
-               SQLX_UpdateorInsert($table_dd,$row); 
-               $row=array(
-                  'node'=>'LOCAL'
-                  ,'description'=>"Local Node"
-                  ,'node_url'=>'localhost'
-               );
-               SQLX_UpdateorInsert($table_dd,$row); 
-		*/
-
+               $t = SQLX_UpdateorInsert($table_dd,$row); 
                $table_dd=dd_TableRef('applications');
                $row=array(
                   'application'=>'nodemanager'
@@ -266,8 +249,8 @@ class install extends x_table2 {
 
                
                scDBConn_Pop();
-               SessionSet('UID','nodemanager');
-               SessionSet('PWD','nodemanager');
+               SessionSet('UID','andromeda');
+               SessionSet('PWD','andromeda');
                break;
             case 5:
                break;
@@ -485,7 +468,7 @@ create database andro;</textarea>
       ?>
       <p>In this step we need to know the username and password
          of the superuser that you just created.
-      <p><b>Please Note: the superuser ID may not begin with 'nodemanager'.</b></p>
+      <p><b>Please Note: the superuser ID may not begin with 'andromeda'.</b></p>
       <form action="index.php" method='post'>
       <table>
          <tr><td>Superuser Account:
@@ -508,7 +491,7 @@ create database andro;</textarea>
          8.1 or better and then rerun the installation.
       <?php
    }
-   function NMCreate()  { 
+   function NMCreate()  {
       if($this->andro==0) {
          ?>
          <p>The 'nodemanager' database does not exist.  Please

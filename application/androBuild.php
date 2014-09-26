@@ -211,7 +211,6 @@ class x_builder {
         } else {
             $app = $parm['APP'];
         }
-
         if ($parm["SPEC_LIST"]<>"") {
             $speclist = explode(",",$parm['SPEC_LIST']);
             foreach ($speclist as $spec) {
@@ -220,11 +219,11 @@ class x_builder {
                 } else {
                     $file = $spec;
                 }
-                if ( is_file( $parm['DIR_PUB'] .'application/' .$file ) ) {
+                if ( is_file( $parm['APP_ROOT_DIR'] .'/application/' .$file ) ) {
                     $checksums[] = array(
                         'file'=>$file,
-                        'md5'=>md5_file( $parm['DIR_PUB'] .'application/' .$file ),
-                        'fullpath'=>$parm['DIR_PUB'] .'application/' .$file
+                        'md5'=>md5_file( $parm['APP_ROOT_DIR'] .'/application/' .$file ),
+                        'fullpath'=>$parm['APP_ROOT_DIR'] .'/application/' .$file
                     );
                 }
             }
@@ -294,12 +293,12 @@ class x_builder {
         // First sanity check, make sure we can connect
         //
         $cnx =
-            " dbname=andro".
+            " dbname=nodemanager".
             " user=".$parm["UID"].
             " password=".$pw;
         $GLOBALS["dbconna"] = pg_connect($cnx,PGSQL_CONNECT_FORCE_NEW);
         if ($GLOBALS["dbconna"]) {
-          $this->LogEntry("Connected to andro database OK.");
+          $this->LogEntry("Connected to nodemanager database OK.");
 
           // Need to know if we are building andro.  if not, find the
           // directory to link to
@@ -3151,7 +3150,7 @@ class x_builder {
         //              now for Andromeda Node Manager
         //if ($parm["APP"]=="andro") { $this->SpecDDL_Triggers_Andro(); }
         $this->SpecDDL_Triggers_Security();
-        if ($parm["APP"]=="andro") { $this->SpecDDL_Triggers_SecurityAndro(); }
+        if ($parm["APP"]=="nodemanager") { $this->SpecDDL_Triggers_SecurityAndro(); }
 
         // Fragments that do not require sequencing
         $this->SpecDDL_Triggers_Defaults();
@@ -8927,7 +8926,6 @@ class x_builder {
         // Write the output to a file and execute it
         $temp = array();  // to avoid compiler warning
         $fileout=$parm["DIR_TMP"].basename($filename).".php";
-
         $this->FS_PUT_CONTENTS($fileout,
             "<?php\n".
             "// File generated from $filename during build \n".
@@ -9703,7 +9701,7 @@ class x_builder {
         # Finally, write out the two config tables
         # DUPLICATE CODE: THIS CODE IS DUPLICATE IN ANDROLIB.PHP
         #                 IN ROUTINE CONFIGWRITE()
-        global $parm;
+        global $AG;
         $alist = array('configfw','configapp','configinst');
         $nocols = array('_agg','skey','skey_quiet','recnum');
         foreach($alist as $table_id) {
@@ -9726,7 +9724,7 @@ class x_builder {
             }
             $text.="\n);\n?>";
             file_put_contents(
-                $parm["DIR_PUB"]."/dynamic/table_$table_id.php"
+                $AG['dirs']['app_root'] ."dynamic/table_$table_id.php"
                 ,$text
             );
         }
@@ -9941,7 +9939,7 @@ class x_builder {
         $app = $GLOBALS["parm"]["APP"];
         $scn = "/tmp/andro_fix_$app.sh";
 
-        $dir_pub = realpath($parm['DIR_LIB'] .'/../../../../../') .'/';
+        $dir_pub = $parm['DIR_ANDRO'];
         $dir_pubx= $parm['APP_ROOT_DIR'];
         $SCRIPT = "";
 
@@ -9993,9 +9991,7 @@ class x_builder {
         $grp = $this->ShellWhoAmI();
         global $parm;
         $app = $GLOBALS["parm"]["APP"];
-
-        $dir_pubx= $GLOBALS["parm"]['APP_ROOT_DIR'];
-
+        $dir_pubx= $parm['APP_ROOT_DIR'];
         // Establish the source
         $this->LogStage("Building Directories and Copying Files");
 
@@ -10019,7 +10015,6 @@ class x_builder {
         foreach($dirs as $row) {
             $tgt=trim($row['dirname']);
             $this->LogEntry("Processing subdir: $tgt");
-
             if(!file_exists($dir_pubx.$tgt)) {
                 $this->LogEntry(" -> Creating this directory: $dir_pubx$tgt");
                 mkdir($dir_pubx.$tgt);
@@ -10062,7 +10057,7 @@ class x_builder {
              // switches.  And of course, nothing gets copied for the node
              // manager itself.
              //
-             if($app=='NodeManager') {
+             if($app=='nodemanager') {
                 $this->LogEntry(" -> NODE MANAGER build, no copy.");
              } else {
                  # KFD 7/14/08, hardcode templates to pull from
@@ -10101,9 +10096,8 @@ class x_builder {
         * ToDo: Clean these functions up to use native PHP methods
         */
         $this->LogEntry("Copying /root files into root directory...");
-
-        $this->recursiveCopy($parm['DIR_ANDRO'] ."root" .DIRECTORY_SEPARATOR, $dir_pubx);
-        $this->LogEntry( "  Copying " .$dir_pubx ."root" .DIRECTORY_SEPARATOR ." to " .$dir_pubx);
+	$this->recursiveCopy($parm['DIR_ANDRO'] ."root" .DIRECTORY_SEPARATOR, $dir_pubx);
+        $this->LogEntry( "  Copying " .$parm['DIR_ANDRO'] ."root" .DIRECTORY_SEPARATOR ." to " .$dir_pubx);
 
         copy($parm['DIR_ANDRO'] ."/root/htaccess", $dir_pubx .".htaccess");
         $this->LogEntry( "  Copying .htaccess into place");
@@ -10298,14 +10292,7 @@ class x_builder {
            $text = str_replace("#","\"",$text);
         }
         $text = $text ."\r\n";
-        #if ( !is_file( $file ) ) {
-            # KFD 6/8/09, why??
-            //  DO 3-23-2009 Changed mode
-            #$FILEOUT = fopen( $file , 'w' );
-            #fwrite($FILEOUT,$text);
-            #fclose($FILEOUT);
-            file_put_contents($file,$text);
-        #}
+        file_put_contents($file,$text);
     }
 
     function fs_Skeleton_copy($src,$dst) {
@@ -10437,9 +10424,7 @@ class x_builder {
             $parm['FLAG_PWMD5']='N';
         }
 
-        $parm["DIR_PUB"] =
-            $this->FS_AddSlash($parm["DIR_PUBLIC"]).
-            $this->FS_AddSlash($parm["DIR_PUBLIC_APP"]);
+        $parm["DIR_PUB"] = $parm['APP_ROOT_DIR'];
 
         $this->LogEntry("===================================================");
         $this->LogEntry(" ANDROMEDA CLIENT UPGRADE PROGRAM ");
@@ -10670,7 +10655,7 @@ class x_builder {
 
     function zzFileWriteGenerated($content,$filename) {
        global $parm;
-        $fname=realpath($parm["DIR_WORKING"] .'/../') .'/generated/'.$filename;
+        $fname=$parm['APP_ROOT_DIR'] .'/generated/'.$filename;
         $FILEOUT=fopen($fname,"w");
         //$this->LogEntry("Writing Generated File: $fname");
         fwrite($FILEOUT,$content);
