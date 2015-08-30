@@ -1,6 +1,7 @@
 <?php
-class appversions_p extends x_table2 {
-   function custom_construct() {
+class AppVersionsP extends XTable2 {
+   function __construct() {
+      parent::__construct();
       if(gp('gp_process')==1) $this->flag_buffer=false;
    }
    

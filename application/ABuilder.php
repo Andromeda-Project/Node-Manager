@@ -18,7 +18,7 @@
    Boston, MA  02110-1301  USA 
    or visit http://www.gnu.org/licenses/gpl.html
 \* ================================================================== */
-class a_builder extends x_table2 {
+class ABuilder extends XTable2 {
 	function custom_construct() {
 		$this->flag_buffer=false;
 		$this->caption = "Run another build";

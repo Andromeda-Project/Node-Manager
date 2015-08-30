@@ -1,5 +1,5 @@
 <?php
-class x6welcome extends androX6 {
+class X6Welcome extends AndroX6 {
     function x6main() {
         ?>
         <h1>Hello World</h1>

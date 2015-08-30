@@ -19,7 +19,7 @@
    Boston, MA  02110-1301  USA 
    or visit http://www.gnu.org/licenses/gpl.html
 \* ================================================================== */
-class a_builder_log extends x_table2 {
+class ABuilderLog extends XTable2 {
 	
 	function main() {
 		echo "<h1>View Build Log</h1>";

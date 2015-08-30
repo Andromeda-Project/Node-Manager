@@ -1,21 +1,26 @@
 <?php
-class a_pullsvna extends x_table2 {
-    function custom_construct() {
-        if(gpExists('gp_out')) $this->flag_buffer=false;
+class APullSvnA extends XTable2
+{
+    function __construct()
+    {
+        parent::__construct();
+        if (gpExists('gp_out')) {
+            $this->flag_buffer=false;
+        }
     }
     
     /**
       *  Standard Andromeda main entry point for an
       *  extension of the x_table2 class.
-      * 
+      *
       */
-    function main() {
-        if(gpExists('gp_out')) {
+    function main()
+    {
+        if (gpExists('gp_out')) {
             ob_start();
             $this->mainPull();
             ob_end_clean();
-        }
-        else {
+        } else {
             $this->mainHTML();
         }
     }
@@ -25,7 +30,8 @@ class a_pullsvna extends x_table2 {
      * click on the "go" button
      *
      */
-    function mainHTML() {
+    function mainHTML()
+    {
         ?>
         <h1>Upgrade Andromeda From Subversion</h1>
         
@@ -55,38 +61,37 @@ class a_pullsvna extends x_table2 {
     
 
     /**
-     * The user has requested that we download the latest 
+     * The user has requested that we download the latest
      * version of each application from its respective
-     * 
+     *
      *
      */
-    function mainPull() { 
+    function mainPull()
+    {
         x_echoFlush('<pre>');
         x_EchoFlush('<h2>Looking For Andromeda Version</h2>');
         x_EchoFlush("");
 
-        // First take care of where we are pulling version 
+        // First take care of where we are pulling version
         // information from
         $def = "http://andro.svn.sourceforge.net/svnroot/andro/releases/";
         $row = SQL_OneRow(
             "Select * from applications where application='andro'"
         );
-        if(!isset($row['svn_url'])) {
+        if (!isset($row['svn_url'])) {
             x_EchoFlush("-- This looks like the first time this node has");
-            x_EchoFlush("   been upgraded from Subversion.  Using default" );
+            x_EchoFlush("   been upgraded from Subversion.  Using default");
             x_echoFlush("   URL to look for releases:");
             x_EchoFlush("   ".$def);
             $url = $def;
-        }
-        else {
-            if(is_null($row['svn_url']) || trim($row['svn_url'])=='') {
+        } else {
+            if (is_null($row['svn_url']) || trim($row['svn_url'])=='') {
                 x_EchoFlush("-- Setting the Subversion URL to default:");
                 x_EchoFlush("   ".$def);
                 $url = $def;
                 $row['svn_url'] = $def;
-                SQLX_Update('applications',$row);
-            }
-            else {
+                SQLX_Update('applications', $row);
+            } else {
                 $url = trim($row['svn_url']);
                 x_EchoFlush("-- Using the following URL for Subversion:");
                 x_EchoFlush("   ".$url);
@@ -99,20 +104,20 @@ class a_pullsvna extends x_table2 {
         $command = 'svn list '.$url;
         x_EchoFlush("   Command is: ".$command);
         $rawtext = `$command`;
-        if($rawtext=='') {
+        if ($rawtext=='') {
             x_EchoFlush("-- NO VERSIONS RETRIEVED!");
             x_EchoFlush("   It may be that the Sourceforge site is down?");
             x_EchoFlush("");
             x_echoFlush(" ---- Stopped Unexpectedly --- ");
             return;
         }
-        $rawtext = str_replace("\r","",$rawtext);
-        $lines = explode("\n",$rawtext);
+        $rawtext = str_replace("\r", "", $rawtext);
+        $lines = explode("\n", $rawtext);
         // Pop off empty entry at end, then get latest version
         array_pop($lines);
         $latest=array_pop($lines);
-        if(substr($latest,-1)=='/') {
-            $latest = substr($latest,0,strlen($latest)-1);
+        if (substr($latest, -1)=='/') {
+            $latest = substr($latest, 0, strlen($latest)-1);
         }
 
         x_EchoFlush("   Latest published version: ".$latest);
@@ -122,22 +127,20 @@ class a_pullsvna extends x_table2 {
         x_EchoFlush("-- Finding out what version the node manager is at");
         $file=$GLOBALS['AG']['dirs']['application'].'_andro_version_.txt';
         x_EchoFlush("   Looking at file: $file");
-        if(!file_exists($file)) {
+        if (!file_exists($file)) {
             x_EchoFlush("   File not found, it appears this is the first time");
             x_EchoFlush("   this node has been upgraded this way. Will proceed");
             x_EchoFlush("   to get latest version.");
-        }
-        else {
+        } else {
             $version = file_get_contents($file);
             x_EchoFlush("   Current version is ".$version);
             
-            if($version == $latest) {
+            if ($version == $latest) {
                 x_echoFlush("   This node is current!  Nothing to do!");
                 x_EchoFlush("");
                 x_echoFlush(" ---- Processing completed normally ---- ");
                 return;
-            }
-            else {
+            } else {
                 x_echoFlush("   Newer version available, will get latest.");
             }
         }
@@ -150,9 +153,9 @@ class a_pullsvna extends x_table2 {
         x_echoFlush("   Command is ".$command);
         `$command`;
         x_echoFlush("");
-        file_put_contents($file,$latest);
+        file_put_contents($file, $latest);
         x_EchoFlush(" ---- Processing completed normally ---- ");
 
-    }        
+    }
 }
 ?>

@@ -1,41 +1,43 @@
 <?php
-class x_welcome extends x_table2 {
-    function main() {
+class XWelcome extends XTable2
+{
+    function main()
+    {
         # KFD 2/17/09.  If installed with Debian package, will
         #               have username and password of "start".
         #               Must force a new id now.
         #
-        if(SessionGet('UID')=='start') {
-            if(gp('user_id')<>'') {
-                if(gp('user_id')=='') {
+        if (SessionGet('UID')=='start') {
+            if (gp('user_id')<>'') {
+                if (gp('user_id')=='') {
                     ErrorAdd("User Id may not be empty");
                 }
-                if(substr(gp('user_id'),0,5)=='andro') {
+                if (substr(gp('user_id'), 0, 5)=='andro') {
                     ErrorAdd("User Id may not begin with 'andro'");
                 }
-                if(gp('password1')<>gp('password2')) {
+                if (gp('password1')<>gp('password2')) {
                     ErrorAdd("Passwords do not match");
                 }
-                if(strlen(trim(gp('password1')))==0) {
+                if (strlen(trim(gp('password1')))==0) {
                     ErrorAdd("Password may not be empty");
                 }
-                if(!Errors()) {
+                if (!Errors()) {
                     $row = array(
                         'user_id'=>gp('user_id')
                         ,'member_password'=>gp('password1')
                     );
-                    SQLX_Insert('usersroot',$row);
-                    if(!Errors()) {
+                    SQLX_Insert('usersroot', $row);
+                    if (!Errors()) {
                         scDBConn_Pop();
-                        SessionSet('UID',gp('user_id'));
-                        SessionSet('PWD',gp('password1'));
+                        SessionSet('UID', gp('user_id'));
+                        SessionSet('PWD', gp('password1'));
                         scDBConn_Push();
                         SQL("DELETE FROM USERSROOT WHERE user_id='start'");
                         
                         # Get rid of the form that replaces login
                         $file=fsDirTop().'application/x_login_form.inc.html';
                         $fileto=$file.'.done';
-                        @rename($file,$fileto);
+                        @rename($file, $fileto);
                     
                         ?>
                         <h1>New Root User Created</h1>
@@ -106,37 +108,36 @@ class x_welcome extends x_table2 {
         // Work out if there is a new release available
         //
         $apps = svnVersions();
-        $andro = a($apps,'andro',array('svn_url'=>''));
+        $andro = a($apps, 'andro', array('svn_url'=>''));
         
-        if(trim($andro['svn_url'])=='') {
+        if (trim($andro['svn_url'])=='') {
             $htmlVersions = '';
         } else {
             $htmlVersions = @file_get_contents($andro['svn_url']);
         }
         $matches =array();
         preg_match_all(
-            '/<li><a href=.*\>(.*)<\/a><\/li>/'
-            ,$htmlVersions
-            ,$matches
+            '/<li><a href=.*\>(.*)<\/a><\/li>/',
+            $htmlVersions,
+            $matches
         );
-        $versions = ArraySafe($matches,1,array());
-        if(count($versions)>0) {
+        $versions = ArraySafe($matches, 1, array());
+        if (count($versions)>0) {
             $latest = array_pop($versions);
-            $latest = str_replace('/','',$latest);
+            $latest = str_replace('/', '', $latest);
             
             // Get current latest
             $current = $andro['local'];
-            if($latest > $current)  {
-            ?>
-            <br/>
-            <div style="border: 5px solid gray; color: blue
+            if ($latest > $current) {
+                <br/>
+                <div style="border: 5px solid gray; color: blue
             font-weight: bolder; margin: 8px; padding: 0 8px 8px 8px">
-            <h2>New Version of Andromeda Available</h2>
+                <h2>new Version of Andromeda Available</h2>
             
-            <p>Version <?php echo $latest?> is available.   <a href="?gp_page=a_pullsvn"
+                <p>Version <?php echo $latest?> is available.   <a href="?gp_page=a_pullsvn"
             >Click Here </a> to go to the Pull Code From Subversion.
             </div>
-            <?php        
+            <?php
             }
         }
             

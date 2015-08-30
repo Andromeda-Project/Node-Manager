@@ -1,6 +1,7 @@
 <?php
-class a_codexfer extends x_table2 {
-   function custom_construct() {
+class ACodeXfer extends XTable2 {
+   function __construct() {
+      parent::__construct();
       $this->flag_buffer=false;
    }
    

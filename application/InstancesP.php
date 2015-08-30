@@ -1,6 +1,7 @@
 <?php
-class instances_p extends x_table2 {
-    function custom_construct() {
+class InstancesP extends XTable2 {
+    function __construct() {
+        parent::__construct();
         if(gp('gp_posted')==1){
             $this->flag_buffer=false;
             $this->caption = "Run another build";

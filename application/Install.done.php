@@ -1,6 +1,7 @@
 <?php
-class install extends x_table2 {
-   function custom_construct() {
+class Install extends XTable2 {
+   function __construct() {
+      parent::__construct();
       if(gp('gp_build')==1) $this->flag_buffer=false;   
    }
 
