@@ -6,21 +6,25 @@ class Install extends XTable2 {
    }
 
    function main() {
+      global $parm;
       // When building, just do this, then leave
       if(gp('gp_build')==1) {
          SessionSet('UID',SessionGet('xUID'));
          SessionSet('PWD',SessionGet('xPWD'));
          ob_start();
-         $GLOBALS["parm"] = array(
-            "DBSERVER_URL"=>"localhost"
-            ,"UID"=>SessionGet('UID')
-            ,"DIR_PUBLIC"=>realpath($GLOBALS['AG']['dirs']['root'].'../../../../')
-            ,"DIR_PUBLIC_APP"=>"nodemanager"
-            ,"APP"=>"NodeManager"
-            ,"APPDSC"=>"Andromeda Node Manager"
-            ,"SPEC_BOOT"=>"AndroDBB"
-            ,"SPEC_LIB"=>"andro_universal"
-            ,"SPEC_LIST"=>"nodemanager.dd.yaml"
+         $parm = array_merge(
+            array(
+               "DBSERVER_URL"=>"localhost"
+               ,"UID"=>SessionGet('UID')
+               ,"DIR_PUBLIC"=>realpath($GLOBALS['AG']['dirs']['root'].'../../../../')
+               ,"DIR_PUBLIC_APP"=>"nodemanager"
+               ,"APP"=>"NodeManager"
+               ,"APPDSC"=>"Andromeda Node Manager"
+               ,"SPEC_BOOT"=>"AndroDBB"
+               ,"SPEC_LIB"=>"andro_universal"
+               ,"SPEC_LIST"=>"nodemanager.dd.yaml"
+            ),
+            $parm
          );
          include("androBuild.php");
          SessionSet('UID','andromeda');

@@ -20,5 +20,11 @@
     ],
     "require": {
         "andro/andromeda": "dev-development"
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:Andromeda-Project/andromeda.git"
+        }
+    ]
 }

@@ -1,6 +1,7 @@
 <?php
-global $parm;
-$AG['dirs']['app_root']    = dirname(__FILE__) .'/';
-$GLOBALS["parm"]['APP_ROOT_DIR'] = $AG['dirs']['app_root'];
-include_once('vendor/autoload.php');
-include_once('vendor/andro/andromeda/index.php');
+global $parm, $AG;
+$parm['APP_ROOT_DIR'] = dirname(__FILE__) . DIRECTORY_SEPARATOR;
+$AG['dirs']['app_root'] = $parm['APP_ROOT_DIR'];
+var_dump($parm);
+require_once('vendor' .DIRECTORY_SEPARATOR . 'autoload.php');
+require_once('vendor' .DIRECTORY_SEPARATOR . 'andro' . DIRECTORY_SEPARATOR . 'andromeda' . DIRECTORY_SEPARATOR . 'index.php');
